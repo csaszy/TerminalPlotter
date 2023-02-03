@@ -1,3 +1,5 @@
+import os
+
 #--------------------------------|Merge Sort|--------------------------------
 def Merge(a,b,m,n,aIndex,bIndex):
     c = []
@@ -48,8 +50,8 @@ class Plotter:
         self.sizex = sizex
         self.sizey = sizey 
         self.mtx = [[0]*sizex for _ in range(sizey)]
-        self.scopex = [0,sizex]
-        self.scopey = [0,sizey]
+        self.scopex = [0,sizex-1]
+        self.scopey = [0,sizey-1]
 
     def DataIn(self,x:list,y:list):
         self.x = x
@@ -57,19 +59,41 @@ class Plotter:
         self.sortedY,self.sortedYIndex = MergeSort(self.y,[i for i in range(len(y))])
         self.sortedX,self.sortedXIndex = MergeSort(self.x,[i for i in range(len(x))])
 
+    def CheckNeighbours(self,where,searchlist):
+        out = [where]
+        i = -1
+        try:
+            while searchlist[where + i] == searchlist[where] and where + i not in out and where + i >= 0:
+                out.append(where+i)
+                i -= 1
+        except:pass
+        i = 1
+        try:
+            while searchlist[where + i] == searchlist[where] and where + i not in out and where + i <= len(searchlist):
+                out.append(where+i)
+                i += 1
+        except: pass
+        return out
+
     def plot(self):
         #calculating visible points
         yInScope = []
         xInScope = []
+        sortedX = self.sortedX
+        sortedy = self.sortedY
         for n in range(self.scopey[0],self.scopey[1]):
             indexInSortedY = BinarySeacrh(self.sortedY,len(self.sortedY),n)
             if not indexInSortedY is None:
-                yInScope.append(self.sortedYIndex[indexInSortedY])     #returns the indexes of the y values that are found in scope
+                matches = self.CheckNeighbours(indexInSortedY,self.sortedY)
+                for match in matches:
+                    yInScope.append(self.sortedYIndex[match])     #returns the indexes of the y values that are found in scope
         
         for n in range(self.scopex[0],self.scopex[1]):
             indexInSortedX = BinarySeacrh(self.sortedX,len(self.sortedX),n)
             if not indexInSortedX is None:
-                xInScope.append(self.sortedXIndex[indexInSortedX])     #returns the indexes of the x values that are found in scope
+                matches = self.CheckNeighbours(indexInSortedX,self.sortedX)
+                for match in matches:
+                    xInScope.append(self.sortedXIndex[match])     #returns the indexes of the y values that are found in scope
 
         #print(self.scopex,self.scopey,xInScope,yInScope)    
         
@@ -79,22 +103,59 @@ class Plotter:
                 visiblePoints.append([self.x[i],self.y[i]])
         
         #settting up matrix
-        #for point in visiblePoints:
-        #    print(point)
-        #    mtx[point[0]-self.scopey[0]]
+        #self.mtx = [[[0]*40 for _ in range(8)]]       #making matrix same size as scope just 4 devop
+        for i,row in enumerate(self.mtx):
+            for j,el in enumerate(row):
+                if el:
+                    self.mtx[i][j] = 0
+
+        for point in visiblePoints:
+            print(point)
+            pOnMtxY = self.scopey[1]-point[1]
+            pOnMtxX = point[0]-self.scopex[0]
+            self.mtx[pOnMtxY][pOnMtxX] = 1
 
         self.printMtx()
 
     def printMtx(self):
+        #os.system('cls')
+        print()
         for i,row in enumerate(self.mtx):
             for j,el in enumerate(row):
-                print(el,end=" ")
+                if el:
+                    print("#",end=" ")
+                else:
+                    print(".",end=" ")
             print()
 
+    def Move(self,dir):
+        print(self.scopey,self.scopex)
+        match dir:
+            case 'w':
+                self.scopey[0] += 1
+                self.scopey[1] += 1
+            case 's':
+                self.scopey[0] -= 1
+                self.scopey[1] -= 1
+            case 'a':
+                self.scopex[0] += 1
+                self.scopex[1] += 1
+            case 'd':
+                self.scopex[0] -= 1
+                self.scopex[1] -= 1
+        print(self.scopey,self.scopex)
+
 if __name__ == "__main__":
-    datax = [0,1,2,3,4,5,6,7,8,9]
-    datay = [-1,-5,3,4,5,-6,2,-1,4,7]
+    #datax = [0,0,1,2,3,4,5,6,7,8,9]
+    #datay = [-1,0,-5,3,4,5,-6,2,-1,4,7]
+    datax = [0,0,0,0,1,2,3,4]
+    datay = [0,1,2,3,3,3,3,3]
 
     p = Plotter(40,8)
     p.DataIn(datax,datay)
     p.plot()
+    while True:
+        command = input(": ")
+        p.Move(command)
+        p.plot()
+        
