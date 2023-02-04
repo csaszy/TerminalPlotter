@@ -1,4 +1,5 @@
 import os
+import math
 
 #--------------------------------|Merge Sort|--------------------------------
 def Merge(a,b,m,n,aIndex,bIndex):
@@ -79,16 +80,14 @@ class Plotter:
         #calculating visible points
         yInScope = []
         xInScope = []
-        sortedX = self.sortedX
-        sortedy = self.sortedY
-        for n in range(self.scopey[0],self.scopey[1]):
+        for n in range(self.scopey[0],self.scopey[1]+1):
             indexInSortedY = BinarySeacrh(self.sortedY,len(self.sortedY),n)
             if not indexInSortedY is None:
                 matches = self.CheckNeighbours(indexInSortedY,self.sortedY)
                 for match in matches:
                     yInScope.append(self.sortedYIndex[match])     #returns the indexes of the y values that are found in scope
         
-        for n in range(self.scopex[0],self.scopex[1]):
+        for n in range(self.scopex[0],self.scopex[1]+1):
             indexInSortedX = BinarySeacrh(self.sortedX,len(self.sortedX),n)
             if not indexInSortedX is None:
                 matches = self.CheckNeighbours(indexInSortedX,self.sortedX)
@@ -103,7 +102,6 @@ class Plotter:
                 visiblePoints.append([self.x[i],self.y[i]])
         
         #settting up matrix
-        #self.mtx = [[[0]*40 for _ in range(8)]]       #making matrix same size as scope just 4 devop
         for i,row in enumerate(self.mtx):
             for j,el in enumerate(row):
                 if el:
@@ -113,23 +111,59 @@ class Plotter:
             print(point)
             pOnMtxY = self.scopey[1]-point[1]
             pOnMtxX = point[0]-self.scopex[0]
+            #try:
             self.mtx[pOnMtxY][pOnMtxX] = 1
+            #except: pass
 
         self.printMtx()
 
     def printMtx(self):
         #os.system('cls')
         print()
+
+        #y notation
+        yNotation = []
+        yNotationf = 5
+        yMaxNotLength = 0
+        for i in range(self.scopey[0],self.scopey[1]+1):
+            if len(str(i)) > yMaxNotLength:
+                yMaxNotLength = len(str(i))
+        for i in range(self.sizey):
+            if (self.scopey[1]-i) % int(math.ceil(self.sizey / yNotationf)) == 0:
+                yNotation.append(f'{" "*(yMaxNotLength-len(str(self.scopey[1]-i)))}{self.scopey[1]-i}')
+            else:
+                yNotation.append(" "*yMaxNotLength)
+
+        #x notation
+        xNotationf = 5
+        xMaxNotLength = 0
+        for i in range(self.scopex[0],self.scopex[1]+1):
+            if len(str(i)) > xMaxNotLength:
+                xMaxNotLength = len(str(i))
+        xNotation = [[" "]*self.sizex for _ in range(xMaxNotLength)]
+        for i in range(self.sizex):
+            if (self.scopex[0]+i) % int(math.ceil(self.sizex / xNotationf)) == 0:
+                for h in range(len(str(self.scopex[0]+i))):
+                    xNotation[h][i] = str(self.scopex[0]+i)[h]
+
         for i,row in enumerate(self.mtx):
+            print(f'{yNotation[i]} | ',end=" ")
             for j,el in enumerate(row):
                 if el:
                     print("#",end=" ")
                 else:
                     print(".",end=" ")
             print()
+        print(f'    {" "*yMaxNotLength}',end="")
+        print(f'{"- "*self.sizex}')
+        for i,row in enumerate(xNotation):
+            print(f'    {" "*yMaxNotLength}',end="")
+            for j,el in enumerate(row):
+                print(el,end=' ')
+            print()
 
     def Move(self,dir):
-        print(self.scopey,self.scopex)
+        print(self.scopex,self.scopey)
         match dir:
             case 'w':
                 self.scopey[0] += 1
@@ -143,7 +177,7 @@ class Plotter:
             case 'd':
                 self.scopex[0] -= 1
                 self.scopex[1] -= 1
-        print(self.scopey,self.scopex)
+        print(self.scopex,self.scopey)
 
 if __name__ == "__main__":
     #datax = [0,0,1,2,3,4,5,6,7,8,9]
@@ -151,7 +185,7 @@ if __name__ == "__main__":
     datax = [0,0,0,0,1,2,3,4]
     datay = [0,1,2,3,3,3,3,3]
 
-    p = Plotter(40,8)
+    p = Plotter(10,8)
     p.DataIn(datax,datay)
     p.plot()
     while True:
