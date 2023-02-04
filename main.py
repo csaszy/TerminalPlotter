@@ -1,6 +1,10 @@
 import os
 import math
 
+
+#--------------------------------|Map Func|--------------------------------
+def Map(input_start,input_end,output_start,output_end,input):
+    return  output_start + ((output_end - output_start) / (input_end - input_start)) * (input - input_start)
 #--------------------------------|Merge Sort|--------------------------------
 def Merge(a,b,m,n,aIndex,bIndex):
     c = []
@@ -59,6 +63,8 @@ class Plotter:
         self.y = y
         self.sortedY,self.sortedYIndex = MergeSort(self.y,[i for i in range(len(y))])
         self.sortedX,self.sortedXIndex = MergeSort(self.x,[i for i in range(len(x))])
+        #self.scopex = [0,self.sortedX[-1]]
+        #self.scopey = [0,self.sortedY[-1]]
 
     def CheckNeighbours(self,where,searchlist):
         out = [where]
@@ -108,9 +114,10 @@ class Plotter:
                     self.mtx[i][j] = 0
 
         for point in visiblePoints:
-            print(point)
-            pOnMtxY = self.scopey[1]-point[1]
-            pOnMtxX = point[0]-self.scopex[0]
+            #print(point)
+            print(Map(self.scopex[0],self.scopex[1],0,self.sizex-1,point[0]),Map(self.scopey[0],self.scopey[1],0,self.sizey-1,point[1]),point)
+            pOnMtxY = round(Map(self.scopey[1],self.scopey[0],0,self.sizey-1,point[1]))
+            pOnMtxX = round(Map(self.scopex[0],self.scopex[1],0,self.sizex-1,point[0]))
             #try:
             self.mtx[pOnMtxY][pOnMtxX] = 1
             #except: pass
@@ -125,27 +132,41 @@ class Plotter:
         yNotation = []
         yNotationf = 5
         yMaxNotLength = 0
-        for i in range(self.scopey[0],self.scopey[1]+1):
-            if len(str(i)) > yMaxNotLength:
-                yMaxNotLength = len(str(i))
         for i in range(self.sizey):
-            if (self.scopey[1]-i) % int(math.ceil(self.sizey / yNotationf)) == 0:
-                yNotation.append(f'{" "*(yMaxNotLength-len(str(self.scopey[1]-i)))}{self.scopey[1]-i}')
+            if i % int(math.ceil(self.sizey / yNotationf)) == 0:
+                yNotation.append(Map(0,self.sizey-1,self.scopey[1],self.scopey[0],i))
+                if len(str(yNotation[-1])) > yMaxNotLength:
+                    yMaxNotLength = len(str(yNotation[-1]))
             else:
-                yNotation.append(" "*yMaxNotLength)
+                yNotation.append('x')
+        for i,el in enumerate(yNotation):
+            if el == 'x':
+                yNotation[i] = " "*yMaxNotLength
+            else:
+                yNotation[i] = f'{" "*(yMaxNotLength-len(str(el)))}{str(el)}'
+        
+        print(yNotation)
 
         #x notation
         xNotationf = 5
         xMaxNotLength = 0
-        for i in range(self.scopex[0],self.scopex[1]+1):
-            if len(str(i)) > xMaxNotLength:
-                xMaxNotLength = len(str(i))
-        xNotation = [[" "]*self.sizex for _ in range(xMaxNotLength)]
+        rawxNotation = []
         for i in range(self.sizex):
-            if (self.scopex[0]+i) % int(math.ceil(self.sizex / xNotationf)) == 0:
-                for h in range(len(str(self.scopex[0]+i))):
-                    xNotation[h][i] = str(self.scopex[0]+i)[h]
+            if i % int(math.ceil(self.sizex / xNotationf)) == 0:
+                rawxNotation.append(Map(0,self.sizex-1,self.scopex[0],self.scopex[1],i))
+                if len(str(rawxNotation[-1])) > xMaxNotLength:
+                    xMaxNotLength = len(str(rawxNotation[-1]))
+            else:
+                rawxNotation.append('x')
+        xNotation = [[" "]*self.sizex for _ in range(xMaxNotLength)]
+        for i,el in enumerate(rawxNotation):
+            for h,d in enumerate(str(el)):
+                if el == 'x':
+                    xNotation[h][i] = " "
+                else:
+                    xNotation[h][i] = d
 
+        #displaying
         for i,row in enumerate(self.mtx):
             print(f'{yNotation[i]} | ',end=" ")
             for j,el in enumerate(row):
@@ -178,18 +199,43 @@ class Plotter:
                 self.scopex[0] -= 1
                 self.scopex[1] -= 1
         print(self.scopex,self.scopey)
+    
+    def Size(self,dir):
+        print("sizeing")
+        print(self.scopex,self.scopey)
+        match dir:
+            case 't':
+                self.scopey[0] -= 5
+                self.scopey[1] += 5
+                self.scopex[0] -= 5
+                self.scopex[1] += 5
+                
+            case 'g':
+                self.scopey[0] += 5
+                self.scopey[1] -= 5
+                self.scopex[0] += 5
+                self.scopex[1] -= 5
+            #case 'g':
+            #    
+            #case 't':
+                
+        print(self.scopex,self.scopey)
 
 if __name__ == "__main__":
     #datax = [0,0,1,2,3,4,5,6,7,8,9]
     #datay = [-1,0,-5,3,4,5,-6,2,-1,4,7]
-    datax = [0,0,0,0,1,2,3,4]
-    datay = [0,1,2,3,3,3,3,3]
+    #datax = [0,0,0,0,1,2,3,4,4,4,4,4,20]
+    #datay = [0,1,2,3,3,3,3,3,2,1,0,-1,5]
 
-    p = Plotter(10,8)
+    datax = [5,5,5,5,6,6,6,6,7,7,7,7,8,8,8,8]
+    datay = [5,6,7,8,5,6,7,8,5,6,7,8,5,6,7,8]
+
+    p = Plotter(21,21)
     p.DataIn(datax,datay)
     p.plot()
     while True:
         command = input(": ")
         p.Move(command)
+        p.Size(command)
         p.plot()
         
