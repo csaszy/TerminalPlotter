@@ -55,8 +55,8 @@ class Plotter:
         self.sizex = sizex
         self.sizey = sizey 
         self.mtx = [[0]*sizex for _ in range(sizey)]
-        self.scopex = [0,sizex-1]
-        self.scopey = [0,sizey-1]
+        #self.scopex = [0,sizex-1]
+        #self.scopey = [0,sizey-1]
 
     def DataIn(self,x:list,y:list):
         self.x = x
@@ -170,7 +170,6 @@ class Plotter:
         ySlider = ["|"]*self.sizey
         startPoint = Map(self.sortedY[0],self.sortedY[-1],0,self.sizey,self.scopey[0])
         endPoint = Map(self.sortedY[0],self.sortedY[-1],0,self.sizey,self.scopey[1])
-        print(startPoint,endPoint)
         for i in range(round(startPoint),round(endPoint)):
             if i >= 0:
                 try:
@@ -180,7 +179,6 @@ class Plotter:
         xSlider = ["-"]*self.sizex
         startPoint = Map(self.sortedX[0],self.sortedX[-1],0,self.sizex,self.scopex[0])
         endPoint = Map(self.sortedX[0],self.sortedX[-1],0,self.sizex,self.scopex[1])
-        print(startPoint,endPoint)
         for i in range(round(startPoint),round(endPoint)):
             if i >= 0:
                 try:
@@ -188,6 +186,9 @@ class Plotter:
                 except: pass
         
         #displaying
+        print(len(self.mtx),len(self.mtx[0]))
+        print(self.sizey,self.sizex)
+        print(self.scopex,self.scopey)
         print(f'    {" "*yMaxNotLength}',end="")
         for i in xSlider:
             print(f'{i} ',end="")
@@ -210,50 +211,59 @@ class Plotter:
 
     def Move(self,dir):
         print(self.scopex,self.scopey)
-        moveMultiplier = 5
+        moveMultiplier = 1
+        movexAmount = int(math.floor((self.scopex[1] - self.scopex[0] +1 ) / (self.sizex -1)))
+        moveyAmount = int(math.floor((self.scopey[1] - self.scopey[0] +1 ) / (self.sizey -1)))
         match dir:
             case 'w':
-                self.scopey[0] += moveMultiplier
-                self.scopey[1] += moveMultiplier
+                self.scopey[0] += moveyAmount*moveMultiplier
+                self.scopey[1] += moveyAmount*moveMultiplier
             case 's':
-                self.scopey[0] -= moveMultiplier
-                self.scopey[1] -= moveMultiplier
-            case 'a':
-                self.scopex[0] += moveMultiplier
-                self.scopex[1] += moveMultiplier
+                self.scopey[0] -= moveyAmount*moveMultiplier
+                self.scopey[1] -= moveyAmount*moveMultiplier
             case 'd':
-                self.scopex[0] -= moveMultiplier
-                self.scopex[1] -= moveMultiplier
+                self.scopex[0] += movexAmount*moveMultiplier
+                self.scopex[1] += movexAmount*moveMultiplier
+            case 'a':
+                self.scopex[0] -= movexAmount*moveMultiplier
+                self.scopex[1] -= movexAmount*moveMultiplier
         print(self.scopex,self.scopey)
     
     def Size(self,dir):
         print("sizeing")
-        zoomMultiplier = 5
+        zoomMultiplier = 1
+        zoomyAmount = int(((self.scopey[1] - self.scopey[0] +1 ) / (self.sizey -1))//2)     #doesnt work :(
         print(self.scopex,self.scopey)
         match dir:
             case 't':
-                if self.scopey[1] - self.scopey[0] > 2*zoomMultiplier:
-                    self.scopey[0] += 1*zoomMultiplier
-                    self.scopey[1] -= 1*zoomMultiplier
-                else:
+                prevScope = [self.scopey[i] for i in range(2)]      #it is necessary to 'copy' the list this way
+                self.scopey[0] += zoomyAmount*zoomMultiplier
+                self.scopey[1] -= zoomyAmount*zoomMultiplier
+                scopeWidth = self.scopey[1] - self.scopey[0]
+                if scopeWidth < self.sizey:                         #if not allowed ==> snapping scope to screen
+                    self.scopey[0] = prevScope[0]
+                    self.scopey[1] = prevScope[0] + self.sizey-1
                     print('[LOG] max Y zoom reached')
             case 'g':
-                if self.scopey[1] - self.scopey[0] < self.sortedY[-1] - self.sortedY[0]:
-                    self.scopey[0] -= 1*zoomMultiplier
-                    self.scopey[1] += 1*zoomMultiplier
-                else:
-                    print('[LOG] min Y zoom reached')
+                self.scopey[0] -= 1*zoomMultiplier
+                self.scopey[1] += 1*zoomMultiplier                
+                #if self.scopey[1] - self.scopey[0] > self.sortedY[-1] - self.sortedY[0]:
+                #    self.scopey[0] += 1*zoomMultiplier
+                #    self.scopey[1] -= 1*zoomMultiplier 
+                #    print('[LOG] min Y zoom reached')
             case 'h':
-                if self.scopex[1] - self.scopex[0] > 2*zoomMultiplier:
-                    self.scopex[0] += 1*zoomMultiplier
-                    self.scopex[1] -= 1*zoomMultiplier
-                else:
-                    print('[LOG] max X zoom reached')
-            case 'f':
-                if self.scopex[1] - self.scopex[0] < self.sortedX[-1] - self.sortedX[0]:
+                self.scopex[0] += 1*zoomMultiplier
+                self.scopex[1] -= 1*zoomMultiplier
+                if self.scopex[0] >= self.scopex[1]:
                     self.scopex[0] -= 1*zoomMultiplier
                     self.scopex[1] += 1*zoomMultiplier
-                else:
+                    print('[LOG] max X zoom reached')
+            case 'f':
+                self.scopex[0] -= 1*zoomMultiplier
+                self.scopex[1] += 1*zoomMultiplier
+                if self.scopex[1] - self.scopex[0] > self.sortedX[-1] - self.sortedX[0]:
+                    self.scopex[0] += 1*zoomMultiplier
+                    self.scopex[1] -= 1*zoomMultiplier
                     print('[LOG] min X zoom reached')
             #case 'g':
             #    
